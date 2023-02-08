@@ -1,0 +1,1 @@
+awk -F, 'NR==1{print > "train.csv";print > "test.csv"} NR>1{if(rand() <= 0.9) print >> "train.csv"; else print >> "test.csv"}' original.csv

@@ -1,0 +1,5 @@
+**/__pycache__/**
+my_awesome_model
+data
+.venv
+.pytest_cache
