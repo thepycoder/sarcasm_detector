@@ -5,3 +5,4 @@ data
 .pytest_cache
 videos
 log.csv
+*.csv

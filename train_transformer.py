@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import evaluate
@@ -40,11 +41,15 @@ def cast_keys_back(d, changed_keys):
 
 
 class SarcasmTrainer:
-    def __init__(self):
+    def __init__(self, seed=42, subset_size=0):
         self.accuracy = evaluate.load("accuracy")
         self.classes = ["NORMAL", "SARCASTIC"]
         self.id2label = {0: "NORMAL", 1: "SARCASTIC"}
         self.label2id = {"NORMAL": 0, "SARCASTIC": 1}
+        Task.current_task().set_parameter("Seed", seed)
+        self.seed = seed
+        Task.current_task().set_parameter("Subset Size", subset_size)
+        self.subset_size = subset_size
 
         self.tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
         self.model = AutoModelForSequenceClassification.from_pretrained(
@@ -63,12 +68,16 @@ class SarcasmTrainer:
 
         dataset = load_dataset(
             "csv",
-            data_files={
-                "train": str(local_dataset_path / "train-balanced-sarcasm.train.csv"),
-                "test": str(local_dataset_path / "train-balanced-sarcasm.test.csv")
-            }
+            data_files=[str(local_dataset_path / csv_path) for csv_path in os.listdir(local_dataset_path)],
+            split="all"
         )
-        dataset = dataset.select(range(100))
+        dataset = dataset.train_test_split(
+            test_size=0.2,
+            shuffle=True,
+            seed=self.seed
+        )
+        if self.subset:
+            dataset['train'] = dataset['train'].select(range(self.subset))
         dataset = dataset.filter(lambda x: bool(x['comment']))
 
         return dataset
@@ -129,5 +138,5 @@ class SarcasmTrainer:
 if __name__ == '__main__':
     Task.add_requirements("torch")
     Task.init(project_name="sarcasm-detector", task_name="DistilBert Training")
-    sarcasm_trainer = SarcasmTrainer()
+    sarcasm_trainer = SarcasmTrainer(subset_size=1000)
     sarcasm_trainer.train()

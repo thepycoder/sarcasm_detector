@@ -5,6 +5,7 @@ import time
 import joblib
 import pandas as pd
 from clearml import Dataset, Task
+from datasets import load_dataset
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
@@ -15,10 +16,15 @@ from utils import plot_confusion_matrix
 
 
 class SklearnTrainer():
-    def __init__(self, model='LinearRegression'):
+    def __init__(self, model='LinearRegression', seed=42, subset_size=0):
         self.task = Task.init(project_name="sarcasm-detector", task_name="Sklearn Training")
         self.task.set_parameter("model", model)
+        self.task.set_parameter("Seed", seed)
+        self.task.set_parameter("Subset Size", subset_size)
+
+        self.seed = seed
         self.model = model
+        self.subset_size = subset_size
         self.pipeline = self.create_pipeline()
     
 
@@ -53,13 +59,21 @@ class SklearnTrainer():
             alias="reddit_kaggle"
         ).get_local_copy())
 
-        train_df = pd.read_csv(str(local_dataset_path / "train-balanced-sarcasm.train.csv")).dropna()
-        test_df = pd.read_csv(str(local_dataset_path / "train-balanced-sarcasm.test.csv")).dropna()
+        dataset = load_dataset(
+            "csv",
+            data_files=[str(local_dataset_path / csv_path) for csv_path in os.listdir(local_dataset_path)],
+            split="all"
+        )
+        dataset = dataset.train_test_split(
+            test_size=0.2,
+            shuffle=True,
+            seed=self.seed
+        )
+        if self.subset:
+            dataset['train'] = dataset['train'].select(range(self.subset))
+        dataset = dataset.filter(lambda x: bool(x['comment']))
 
-        train, y_train = train_df["comment"], train_df["label"]
-        test, y_test = test_df["comment"], test_df["label"]
-
-        return train, y_train, test, y_test
+        return dataset['train']['comment'], dataset['train']['label'], dataset['test']['comment'], dataset['test']['label']
     
 
     def train(self):
@@ -83,5 +97,5 @@ class SklearnTrainer():
 
 
 if __name__ == '__main__':
-    sarcasm_trainer = SklearnTrainer()
+    sarcasm_trainer = SklearnTrainer(subset_size=1000)
     sarcasm_trainer.train()
