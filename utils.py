@@ -35,7 +35,7 @@ def plot_confusion_matrix(actual, predicted, classes,
     plt.tight_layout()
     plt.ylabel('Predicted label')
     plt.xlabel('True label')
-    Task.current_task().get_logger().report_matplotlib_figure("Confusion Matrix", "", plt)
+    Task.current_task().get_logger().report_matplotlib_figure(title, "", plt)
     
     if path_to_save_fig:
         plt.savefig(path_to_save_fig, dpi=300, bbox_inches='tight')

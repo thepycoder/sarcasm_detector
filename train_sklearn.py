@@ -1,12 +1,15 @@
 import os
 from pathlib import Path
-from clearml import Dataset, Task
-import numpy as np
+import time
+
+import joblib
 import pandas as pd
+from clearml import Dataset, Task
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score
+from sklearn.pipeline import Pipeline
+from uuid import uuid4
 
 from utils import plot_confusion_matrix
 
@@ -61,11 +64,22 @@ class SklearnTrainer():
 
     def train(self):
         train, y_train, test, y_test = self.get_data()
+
+        start_training = time.time()
         self.pipeline.fit(train, y_train)
+        self.task.get_logger().report_single_value("train_runtime", time.time() - start_training)
 
         y_pred = self.pipeline.predict(test)
-        self.task.report_single_value("Accuracy Score", accuracy_score(y_test, y_pred))
-        plot_confusion_matrix(y_test, y_pred, self.pipeline.named_steps['model'].classes_, figsize=(8, 8))
+        self.task.get_logger().report_single_value("Accuracy", accuracy_score(y_test, y_pred))
+        plot_confusion_matrix(
+            y_test,
+            y_pred,
+            self.pipeline.named_steps['model'].classes_,
+            figsize=(8, 8),
+            title=f"{self.model} Confusion Matrix"
+        )
+
+        joblib.dump(self.pipeline, f"my_awesome_model/sklearn_classifier_{uuid4()}.joblib")
 
 
 if __name__ == '__main__':

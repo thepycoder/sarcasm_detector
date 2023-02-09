@@ -42,6 +42,7 @@ def cast_keys_back(d, changed_keys):
 class SarcasmTrainer:
     def __init__(self):
         self.accuracy = evaluate.load("accuracy")
+        self.classes = ["NORMAL", "SARCASTIC"]
         self.id2label = {0: "NORMAL", 1: "SARCASTIC"}
         self.label2id = {"NORMAL": 0, "SARCASTIC": 1}
 
@@ -64,9 +65,10 @@ class SarcasmTrainer:
             "csv",
             data_files={
                 "train": str(local_dataset_path / "train-balanced-sarcasm.train.csv"),
-                "val": str(local_dataset_path / "train-balanced-sarcasm.test.csv")
+                "test": str(local_dataset_path / "train-balanced-sarcasm.test.csv")
             }
         )
+        dataset = dataset.select(range(100))
         dataset = dataset.filter(lambda x: bool(x['comment']))
 
         return dataset
@@ -82,7 +84,10 @@ class SarcasmTrainer:
     def compute_metrics(self, eval_pred):
         predictions, labels = eval_pred
         predictions = np.argmax(predictions, axis=1)
-        return self.accuracy.compute(predictions=predictions, references=labels)
+        plot_confusion_matrix(labels, predictions, self.classes, title='DistilBERT Confusion Matrix')
+        accuracy = self.accuracy.compute(predictions=predictions, references=labels)
+        Task.current_task().get_logger().report_single_value("Accuracy", accuracy['accuracy'])
+        return accuracy
 
 
     def train(self):
@@ -105,13 +110,14 @@ class SarcasmTrainer:
         # Allow ClearML access to the training args and allow it to override the arguments for remote execution
         args_class = type(training_args)
         args, changed_keys = cast_keys_to_string(training_args.to_dict())
+        Task.current_task().connect(args)
         training_args = args_class(**cast_keys_back(args, changed_keys)[0])
 
         self.trainer = Trainer(
             model=self.model,
             args=training_args,
             train_dataset=tokenized_dataset["train"],
-            eval_dataset=tokenized_dataset["val"],
+            eval_dataset=tokenized_dataset["test"],
             tokenizer=self.tokenizer,
             data_collator=data_collator,
             compute_metrics=self.compute_metrics,
@@ -119,16 +125,8 @@ class SarcasmTrainer:
 
         self.trainer.train()
 
-        # Evaluate for confusion matrix
-        y_predict = self.trainer.predict(tokenized_dataset["val"], verbose=1)
-        y_predict[y_predict > 0.5] = 1
-        y_predict[y_predict <= 0.5] = 0
-        plot_confusion_matrix(tokenized_dataset['val']['label'], y_predict, 'DistilBERT Confusion Matrix')
-
-
 
 if __name__ == '__main__':
-    Task.add_requirements("scikit-learn")
     Task.add_requirements("torch")
     Task.init(project_name="sarcasm-detector", task_name="DistilBert Training")
     sarcasm_trainer = SarcasmTrainer()
