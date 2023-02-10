@@ -17,14 +17,14 @@ from utils import plot_confusion_matrix
 
 class SklearnTrainer():
     def __init__(self, model='LinearRegression', seed=42, subset_size=0):
-        self.task = Task.init(project_name="sarcasm-detector", task_name="Sklearn Training")
+        self.task = Task.init(project_name="sarcasm_detector", task_name="Sklearn Training")
         self.task.set_parameter("model", model)
         self.task.set_parameter("Seed", seed)
         self.task.set_parameter("Subset Size", subset_size)
 
         self.seed = seed
         self.model = model
-        self.subset_size = subset_size
+        self.subset = subset_size
         self.pipeline = self.create_pipeline()
     
 
@@ -54,9 +54,9 @@ class SklearnTrainer():
     
     def get_data(self):
         local_dataset_path = Path(Dataset.get(
-            dataset_project="sarcasm-detector",
-            dataset_name="reddit_kaggle",
-            alias="reddit_kaggle"
+            dataset_project="sarcasm_detector",
+            dataset_name="sarcasm_dataset",
+            alias="sarcasm_dataset"
         ).get_local_copy())
 
         dataset = load_dataset(

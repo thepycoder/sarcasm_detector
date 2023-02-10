@@ -49,7 +49,7 @@ class SarcasmTrainer:
         Task.current_task().set_parameter("Seed", seed)
         self.seed = seed
         Task.current_task().set_parameter("Subset Size", subset_size)
-        self.subset_size = subset_size
+        self.subset = subset_size
 
         self.tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
         self.model = AutoModelForSequenceClassification.from_pretrained(
@@ -61,9 +61,9 @@ class SarcasmTrainer:
 
     def get_data(self):
         local_dataset_path = Path(Dataset.get(
-            dataset_project="sarcasm-detector",
-            dataset_name="reddit_kaggle",
-            alias="reddit_kaggle"
+            dataset_project="sarcasm_detector",
+            dataset_name="sarcasm_dataset",
+            alias="sarcasm_dataset"
         ).get_local_copy())
 
         dataset = load_dataset(
@@ -137,6 +137,6 @@ class SarcasmTrainer:
 
 if __name__ == '__main__':
     Task.add_requirements("torch")
-    Task.init(project_name="sarcasm-detector", task_name="DistilBert Training")
+    Task.init(project_name="sarcasm_detector", task_name="DistilBert Training")
     sarcasm_trainer = SarcasmTrainer(subset_size=1000)
     sarcasm_trainer.train()
