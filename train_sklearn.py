@@ -88,7 +88,7 @@ class SklearnTrainer():
         plot_confusion_matrix(
             y_test,
             y_pred,
-            self.pipeline.named_steps['model'].classes_,
+            ["NORMAL", "SARCASTIC"],
             figsize=(8, 8),
             title=f"{self.model} Confusion Matrix"
         )

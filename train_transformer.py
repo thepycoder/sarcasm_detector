@@ -5,7 +5,6 @@ import evaluate
 import numpy as np
 from clearml import Dataset, Task
 from datasets import load_dataset
-from torch.utils.data import DataLoader
 from transformers import (AutoModelForSequenceClassification, AutoTokenizer,
                           DataCollatorWithPadding, Trainer, TrainingArguments)
 
@@ -121,6 +120,8 @@ class SarcasmTrainer:
         args, changed_keys = cast_keys_to_string(training_args.to_dict())
         Task.current_task().connect(args)
         training_args = args_class(**cast_keys_back(args, changed_keys)[0])
+
+        print(f"Training with params: {training_args}")
 
         self.trainer = Trainer(
             model=self.model,
