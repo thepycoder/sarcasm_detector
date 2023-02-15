@@ -88,7 +88,6 @@ class SarcasmTrainer:
 
         return data_collator, tokenized_dataset
 
-
     def compute_metrics(self, eval_pred):
         predictions, labels = eval_pred
         predictions = np.argmax(predictions, axis=1)
@@ -96,7 +95,6 @@ class SarcasmTrainer:
         accuracy = self.accuracy.compute(predictions=predictions, references=labels)
         Task.current_task().get_logger().report_single_value("Accuracy", accuracy['accuracy'])
         return accuracy
-
 
     def train(self):
         dataset = self.get_data()

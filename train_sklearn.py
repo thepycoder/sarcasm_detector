@@ -17,7 +17,7 @@ from utils import plot_confusion_matrix
 
 class SklearnTrainer():
     def __init__(self, model='LinearRegression', seed=42, subset_size=0):
-        self.task = Task.init(project_name="sarcasm_detector", task_name="Sklearn Training")
+        self.task = Task.init(project_name="sarcasm_detector", task_name="Sklearn Training", output_uri=True)
         self.task.set_parameter("model", model)
         self.task.set_parameter("Seed", seed)
         self.task.set_parameter("Subset Size", subset_size)
