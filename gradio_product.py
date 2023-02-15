@@ -3,19 +3,18 @@ import glob
 import os
 from pathlib import Path
 import re
-from typing import Any, List
 from uuid import uuid4
-from clearml import Dataset
-from gradio.flagging import FlaggingCallback
-from gradio.components import IOComponent
+from clearml import Dataset, Model
 import gradio as gr
 import joblib
 import time
 from transformers import pipeline
 
-# transformer_pipeline = pipeline("text-classification", model="./my_awesome_model/checkpoint-56828", device='cuda:0')
-transformer_pipeline = pipeline("text-classification", model="./my_awesome_model/checkpoint-56828", device='cpu')
-sklearn_pipeline = joblib.load("my_awesome_model/sklearn_classifier_30c256d0-b43e-4d03-92ae-5c45d96dddcb.joblib")
+transformer_model_path = Model(model_id="ba3f2c218d264bf880de7c90d1d51f3f").get_local_copy()
+sklearn_model_path = Model(model_id="15d60bac90de446ba516654abf390760").get_local_copy()
+
+transformer_pipeline = pipeline("text-classification", model=transformer_model_path, device='cpu')
+sklearn_pipeline = joblib.load(sklearn_model_path)
 
 
 def classify_transformer(sentence):

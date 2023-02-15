@@ -45,10 +45,10 @@ class SarcasmTrainer:
         self.classes = ["NORMAL", "SARCASTIC"]
         self.id2label = {0: "NORMAL", 1: "SARCASTIC"}
         self.label2id = {"NORMAL": 0, "SARCASTIC": 1}
-        Task.current_task().set_parameter("Seed", seed)
+        Task.current_task().set_parameter("seed", seed)
         self.seed = seed
-        Task.current_task().set_parameter("Subset Size", subset_size)
-        self.subset = subset_size
+        Task.current_task().set_parameter("subset_size", subset_size)
+        self.subset_size = subset_size
 
         self.tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
         self.model = AutoModelForSequenceClassification.from_pretrained(
@@ -75,8 +75,8 @@ class SarcasmTrainer:
             shuffle=True,
             seed=self.seed
         )
-        if self.subset:
-            dataset['train'] = dataset['train'].select(range(self.subset))
+        if self.subset_size:
+            dataset['train'] = dataset['train'].select(range(self.subset_size))
         dataset = dataset.filter(lambda x: bool(x['comment']))
 
         return dataset

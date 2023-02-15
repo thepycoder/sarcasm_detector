@@ -1,39 +1,40 @@
 import os
-from pathlib import Path
 import time
+from pathlib import Path
+from uuid import uuid4
 
 import joblib
-import pandas as pd
 from clearml import Dataset, Task
 from datasets import load_dataset
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 from sklearn.pipeline import Pipeline
-from uuid import uuid4
 
 from utils import plot_confusion_matrix
 
 
 class SklearnTrainer():
     def __init__(self, model='LinearRegression', seed=42, subset_size=0):
-        self.task = Task.init(project_name="sarcasm_detector", task_name="Sklearn Training", output_uri=True)
+        self.task = Task.init(
+            project_name="sarcasm_detector",
+            task_name="Sklearn Training",
+            output_uri=True
+        )
         self.task.set_parameter("model", model)
-        self.task.set_parameter("Seed", seed)
-        self.task.set_parameter("Subset Size", subset_size)
+        self.task.set_parameter("seed", seed)
+        self.task.set_parameter("subset_size", subset_size)
 
         self.seed = seed
         self.model = model
-        self.subset = subset_size
+        self.subset_size = subset_size
         self.pipeline = self.create_pipeline()
     
-
     def create_pipeline(self):
         # Vectorizer
         vectorizer = TfidfVectorizer(ngram_range=(1, 2), max_features=50000, min_df=2)
 
         # Model
-        model = None
         if self.model == "LinearRegression":
             # multinomial logistic regression a.k.a softmax classifier
             cfg = {
@@ -47,11 +48,12 @@ class SklearnTrainer():
             model = LogisticRegression(
                 **cfg
             )
+        else:
+            model = None
         
         # Pipeline
         return Pipeline([('vectorizer', vectorizer), ('model', model)])
 
-    
     def get_data(self):
         local_dataset_path = Path(Dataset.get(
             dataset_project="sarcasm_detector",
@@ -61,7 +63,9 @@ class SklearnTrainer():
 
         dataset = load_dataset(
             "csv",
-            data_files=[str(local_dataset_path / csv_path) for csv_path in os.listdir(local_dataset_path)],
+            data_files=[str(local_dataset_path / csv_path)
+                        for csv_path in os.listdir(local_dataset_path)
+                        ],
             split="all"
         )
         dataset = dataset.train_test_split(
@@ -69,13 +73,15 @@ class SklearnTrainer():
             shuffle=True,
             seed=self.seed
         )
-        if self.subset:
-            dataset['train'] = dataset['train'].select(range(self.subset))
+        if self.subset_size:
+            dataset['train'] = dataset['train'].select(range(self.subset_size))
         dataset = dataset.filter(lambda x: bool(x['comment']))
 
-        return dataset['train']['comment'], dataset['train']['label'], dataset['test']['comment'], dataset['test']['label']
+        return (dataset['train']['comment'],
+                dataset['train']['label'],
+                dataset['test']['comment'],
+                dataset['test']['label'])
     
-
     def train(self):
         train, y_train, test, y_test = self.get_data()
 
