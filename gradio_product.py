@@ -11,7 +11,7 @@ import time
 from transformers import pipeline
 
 # transformer_model_path = Model(model_id="f49e68b112bf407daed4b309bd28a9f2").get_local_copy()
-transformer_pipeline = pipeline("text-classification", model="./my_awesome_model/checkpoint-best", device='cpu')
+transformer_pipeline = pipeline("text-classification", model="/home/victor/Projects/sarcasm_detector/my_awesome_model/checkpoint-best", device='cpu')
 sklearn_model_path = Model(model_id="20e82b945a8f4b679ce402a56944674d").get_local_copy()
 
 sklearn_pipeline = joblib.load(sklearn_model_path)
