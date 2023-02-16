@@ -99,6 +99,7 @@ class SklearnTrainer():
             title=f"{self.model} Confusion Matrix"
         )
 
+        os.makedirs("my_awesome_model", exist_ok=True)
         joblib.dump(self.pipeline, f"my_awesome_model/sklearn_classifier_{uuid4()}.joblib")
 
 

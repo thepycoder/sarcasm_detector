@@ -10,11 +10,11 @@ import joblib
 import time
 from transformers import pipeline
 
-transformer_model_path = Model(model_id="ba3f2c218d264bf880de7c90d1d51f3f").get_local_copy()
-sklearn_model_path = Model(model_id="15d60bac90de446ba516654abf390760").get_local_copy()
+transformer_model_path = Model(model_id="f49e68b112bf407daed4b309bd28a9f2").get_local_copy()
+sklearn_model_path = Model(model_id="20e82b945a8f4b679ce402a56944674d").get_local_copy()
 
-transformer_pipeline = pipeline("text-classification", model=transformer_model_path, device='cpu')
 sklearn_pipeline = joblib.load(sklearn_model_path)
+transformer_pipeline = pipeline("text-classification", model=transformer_model_path, device='cpu')
 
 
 def classify_transformer(sentence):
@@ -46,9 +46,9 @@ def parse_output_to_label(output):
         label = result.group(1)
         certainty = float(result.group(2))
         if label == "NORMAL":
-            return [0, certainty]
+            return [0]
         elif label == "SARCASTIC":
-            return [1, certainty]
+            return [1]
 
 def log_to_csv(text, model_output, csv_name, count, prefix=""):
     os.makedirs("flagged", exist_ok=True)
@@ -60,12 +60,11 @@ def log_to_csv(text, model_output, csv_name, count, prefix=""):
         if os.stat(log_filepath).st_size > 0:
             pass
         else:
-            writer.writerow(['comment', 'label', 'score'])
+            writer.writerow(['comment', 'label'])
         writer.writerow(csv_data)
     
     new_count = count + 1
     return new_count, f"{new_count} labeled samples"
-
 
 def create_clearml_dataset_version(csv_filename, amount, counter):
     paths = glob.glob(str(Path("flagged") / f"*_{csv_filename}"))
