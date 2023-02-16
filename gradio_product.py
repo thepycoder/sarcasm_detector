@@ -10,12 +10,11 @@ import joblib
 import time
 from transformers import pipeline
 
-# transformer_model_path = Model(model_id="f49e68b112bf407daed4b309bd28a9f2").get_local_copy()
-transformer_pipeline = pipeline("text-classification", model="/home/victor/Projects/sarcasm_detector/my_awesome_model/checkpoint-best", device='cpu')
+transformer_model_path = Model(model_id="98fa034c124f4bb5be394c6ba25cc1b7").get_local_copy()
 sklearn_model_path = Model(model_id="20e82b945a8f4b679ce402a56944674d").get_local_copy()
 
 sklearn_pipeline = joblib.load(sklearn_model_path)
-# transformer_pipeline = pipeline("text-classification", model=transformer_model_path, device='cpu')
+transformer_pipeline = pipeline("text-classification", model=transformer_model_path, device='cpu')
 
 
 def classify_transformer(sentence):
