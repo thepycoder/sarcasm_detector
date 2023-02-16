@@ -126,4 +126,4 @@ with demo:
     # Package the current labels and ship them as a ClearML Dataset
     b4.click(create_clearml_dataset_version, inputs=[csv_filename, amount_labeled_var, counter], outputs=[csv_filename, amount_labeled_var, counter])
 
-demo.launch(debug=True)
+demo.launch()
